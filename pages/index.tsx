@@ -7,9 +7,13 @@ import {
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 
 import useProvider from "../hooks/useProvider";
+import usePriceFeed from "../hooks/usePriceFeed";
+import useSPLTokens from "../hooks/useSPLTokens";
+import Image from "next/image";
 
 const Home: NextPage = () => {
   const { wallet, connection } = useProvider();
+  const { tokens, loading: tokenLoading } = useSPLTokens();
   const [balance, setBalance] = useState<number | null>(null);
 
   const refetchSOL = useCallback(async () => {
@@ -19,6 +23,12 @@ const Home: NextPage = () => {
       );
     }
   }, [wallet, connection]);
+
+  useEffect(() => {
+    if (tokens) {
+      console.log(tokens);
+    }
+  }, [tokens]);
 
   useEffect(() => {
     void refetchSOL();
@@ -39,11 +49,24 @@ const Home: NextPage = () => {
               {wallet?.publicKey.toBase58().substring(0, 10)}...
             </p>
           </div>
-          <div>
-            <h5>Balance</h5>
-            <p className="text-2xl">
-              {balance} <span className="font-medium">SOL</span>
-            </p>
+          <div className="space-y-2">
+            {tokens &&
+              tokens.map((token) => (
+                <div key={token.mint} className="flex space-x-2 items-center">
+                  <div className="h-8 w-8">
+                    <Image
+                      src={token.logo}
+                      width={32}
+                      height={32}
+                      layout="responsive"
+                      alt={token.symbol}
+                    />
+                  </div>
+                  <p>
+                    {token.amount} {10 ** token.decimals}
+                  </p>
+                </div>
+              ))}
           </div>
         </div>
       )}
